@@ -1,0 +1,62 @@
+with-expecter: true
+disable-version-string: true
+resolve-type-alias: false
+issue-845-fix: true
+
+packages:
+  mini-workflow/frontend/internal/ports:
+    interfaces:
+      HistoryClient:
+        config:
+          dir: "frontend/internal/mocks"
+          outpkg: mocks
+          filename: "mock_history_client.go"
+          mockname: "MockHistoryClient"
+      MatchingClient:
+        config:
+          dir: "frontend/internal/mocks"
+          outpkg: mocks
+          filename: "mock_matching_client.go"
+          mockname: "MockMatchingClient"
+
+  mini-workflow/history/internal/ports:
+    interfaces:
+      HistoryService:
+        config:
+          dir: "history/internal/mocks"
+          outpkg: mocks
+          filename: "mock_history_service.go"
+          mockname: "MockHistoryService"
+      MatchingClient:
+        config:
+          dir: "history/internal/mocks"
+          outpkg: mocks
+          filename: "mock_matching_client.go"
+          mockname: "MockMatchingClient"
+      ExecutionRepository:
+        config:
+          dir: "history/internal/mocks"
+          outpkg: mocks
+          filename: "mock_execution_repository.go"
+          mockname: "MockExecutionRepository"
+      TimerStore:
+        config:
+          dir: "history/internal/mocks"
+          outpkg: mocks
+          filename: "mock_timer_store.go"
+          mockname: "MockTimerStore"
+
+  mini-workflow/matching/internal/ports:
+    interfaces:
+      MatchingService:
+        config:
+          dir: "matching/internal/mocks"
+          outpkg: mocks
+          filename: "mock_matching_service.go"
+          mockname: "MockMatchingService"
+      TaskQueue:
+        config:
+          dir: "matching/internal/mocks"
+          outpkg: mocks
+          filename: "mock_task_queue.go"
+          mockname: "MockTaskQueue"

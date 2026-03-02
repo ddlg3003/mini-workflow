@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: workflow_postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: minidb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d minidb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: workflow_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  matching:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: workflow_matching
+    command: ["/bin/matching"]
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+
+  history:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: workflow_history
+    command: ["/bin/history"]
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      matching:
+        condition: service_started
+    ports:
+      - "8081:8081"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: workflow_frontend
+    command: ["/bin/frontend"]
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    depends_on:
+      history:
+        condition: service_started
+      matching:
+        condition: service_started
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
+  redis_data:

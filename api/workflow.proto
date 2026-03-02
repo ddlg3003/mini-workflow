@@ -1,0 +1,259 @@
+syntax = "proto3";
+
+package workflow;
+
+option go_package = "mini-workflow/api;workflow";
+
+// --- Frontend Service (Gateway) ---
+// Single entry point for Clients and Workers.
+service FrontendService {
+  // Client APIs
+  rpc StartWorkflow(StartWorkflowRequest) returns (StartWorkflowResponse);
+  rpc SignalWorkflow(SignalWorkflowRequest) returns (SignalWorkflowResponse);
+  rpc QueryWorkflow(QueryWorkflowRequest) returns (QueryWorkflowResponse);
+  rpc GetWorkflowExecutionHistory(GetHistoryRequest) returns (GetHistoryResponse);
+
+  // Workflow Task Polling (For Logic Workers)
+  rpc PollWorkflowTaskQueue(PollWorkflowTaskQueueRequest) returns (PollWorkflowTaskQueueResponse);
+  rpc RespondWorkflowTaskCompleted(RespondWorkflowTaskCompletedRequest) returns (RespondWorkflowTaskCompletedResponse);
+  rpc RespondWorkflowTaskFailed(RespondWorkflowTaskFailedRequest) returns (RespondWorkflowTaskFailedResponse);
+
+  // Activity Task Polling (For Execution Workers)
+  rpc PollActivityTaskQueue(PollActivityTaskQueueRequest) returns (PollActivityTaskQueueResponse);
+  rpc RespondActivityTaskCompleted(RespondActivityTaskCompletedRequest) returns (RespondActivityTaskCompletedResponse);
+  rpc RespondActivityTaskFailed(RespondActivityTaskFailedRequest) returns (RespondActivityTaskFailedResponse);
+  
+  // Heartbeat: Check liveness and report progress for Activities
+  rpc RecordActivityTaskHeartbeat(RecordActivityTaskHeartbeatRequest) returns (RecordActivityTaskHeartbeatResponse);
+}
+
+// --- History Service ---
+// Manages State Machine, Event Store, and Timers.
+service HistoryService {
+  rpc RecordWorkflowExecutionStarted(RecordWorkflowExecutionStartedRequest) returns (RecordWorkflowExecutionStartedResponse);
+  rpc RecordWorkflowTaskStarted(RecordWorkflowTaskStartedRequest) returns (RecordWorkflowTaskStartedResponse);
+  rpc RecordWorkflowTaskCompleted(RecordWorkflowTaskCompletedHistoryRequest) returns (RecordWorkflowTaskCompletedHistoryResponse);
+  rpc RecordWorkflowTaskFailed(RecordWorkflowTaskFailedHistoryRequest) returns (RecordWorkflowTaskFailedHistoryResponse);
+
+  rpc RecordActivityTaskStarted(RecordActivityTaskStartedRequest) returns (RecordActivityTaskStartedResponse);
+  rpc RecordActivityTaskCompleted(RecordActivityTaskCompletedRequest) returns (RecordActivityTaskCompletedResponse);
+  rpc RecordActivityTaskFailed(RecordActivityTaskFailedRequest) returns (RecordActivityTaskFailedResponse);
+  rpc RecordActivityTaskHeartbeat(RecordActivityTaskHeartbeatRequest) returns (RecordActivityTaskHeartbeatResponse);
+
+  rpc SignalWorkflowExecution(SignalWorkflowRequest) returns (SignalWorkflowResponse);
+  rpc QueryWorkflowExecution(QueryWorkflowRequest) returns (QueryWorkflowResponse);
+  rpc GetWorkflowExecutionHistory(GetHistoryRequest) returns (GetHistoryResponse);
+}
+
+// --- Matching Service (Task Broker) ---
+// Task Queues for Workflows and Activities.
+service MatchingService {
+  rpc AddWorkflowTask(AddWorkflowTaskRequest) returns (AddWorkflowTaskResponse);
+  rpc AddActivityTask(AddActivityTaskRequest) returns (AddActivityTaskResponse);
+  
+  rpc PollWorkflowTaskQueue(PollWorkflowTaskQueueRequest) returns (PollWorkflowTaskQueueResponse);
+  rpc PollActivityTaskQueue(PollActivityTaskQueueRequest) returns (PollActivityTaskQueueResponse);
+}
+
+// --- Common Message Definitions ---
+
+// Workflow Start/Signal/Query
+message StartWorkflowRequest {
+  string workflow_id = 1;
+  string workflow_type = 2;
+  string task_queue = 3;
+  bytes input = 4;
+}
+
+message StartWorkflowResponse {
+  string run_id = 1;
+}
+
+message SignalWorkflowRequest {
+  string workflow_id = 2;
+  string run_id = 3;
+  string signal_name = 4;
+  bytes input = 5;
+}
+
+message SignalWorkflowResponse {}
+
+message QueryWorkflowRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string query_type = 3;
+  bytes query_args = 4;
+}
+
+message QueryWorkflowResponse {
+  bytes query_result = 1;
+}
+
+message GetHistoryRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+}
+
+message GetHistoryResponse {
+  repeated HistoryEvent history = 1;
+}
+
+// Polling Messages
+message PollWorkflowTaskQueueRequest {
+  string task_queue = 1;
+  string identity = 2; 
+}
+
+message PollWorkflowTaskQueueResponse {
+  bytes task_token = 1;
+  string workflow_type = 2;
+  repeated HistoryEvent history = 3; // For Replay
+}
+
+message PollActivityTaskQueueRequest {
+  string task_queue = 1;
+  string identity = 2;
+}
+
+message PollActivityTaskQueueResponse {
+  bytes task_token = 1;
+  string activity_id = 2;
+  string activity_type = 3;
+  bytes input = 4;
+  int32 heartbeat_timeout_seconds = 5;
+}
+
+// Respond Messages
+message RespondWorkflowTaskCompletedRequest {
+  bytes task_token = 1;
+  repeated Command commands = 2; 
+  string identity = 3;
+}
+
+message RespondWorkflowTaskCompletedResponse {}
+
+message RespondWorkflowTaskFailedRequest {
+  bytes task_token = 1;
+  string cause = 2;
+  string identity = 3;
+}
+
+message RespondWorkflowTaskFailedResponse {}
+
+message RespondActivityTaskCompletedRequest {
+  bytes task_token = 1;
+  bytes result = 2;
+  string identity = 3;
+}
+
+message RespondActivityTaskCompletedResponse {}
+
+message RespondActivityTaskFailedRequest {
+  bytes task_token = 1;
+  string reason = 2;
+  string details = 3;
+  string identity = 4;
+}
+
+message RespondActivityTaskFailedResponse {}
+
+message RecordActivityTaskHeartbeatRequest {
+  bytes task_token = 1;
+  bytes details = 2; 
+}
+
+message RecordActivityTaskHeartbeatResponse {
+  bool cancel_requested = 1;
+}
+
+// Internal Service Requests (History & Matching)
+message RecordWorkflowExecutionStartedRequest {
+  StartWorkflowRequest start_request = 1;
+}
+
+message RecordWorkflowExecutionStartedResponse {
+  string run_id = 1;
+}
+
+message RecordWorkflowTaskStartedRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+}
+
+message RecordWorkflowTaskStartedResponse {}
+
+message RecordWorkflowTaskCompletedHistoryRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  repeated Command commands = 3;
+}
+
+message RecordWorkflowTaskCompletedHistoryResponse {}
+
+message RecordActivityTaskStartedRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string activity_id = 3;
+}
+
+message RecordActivityTaskStartedResponse {}
+
+message RecordActivityTaskCompletedRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string activity_id = 3;
+  bytes result = 4;
+}
+
+message RecordActivityTaskCompletedResponse {}
+
+message RecordActivityTaskFailedRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string activity_id = 3;
+  string reason = 4;
+}
+
+message RecordActivityTaskFailedResponse {}
+
+message AddWorkflowTaskRequest {
+  string task_queue = 1;
+  string workflow_id = 2;
+  string run_id = 3;
+  string workflow_type = 4;
+}
+
+message AddWorkflowTaskResponse {}
+
+message AddActivityTaskRequest {
+  string task_queue = 1;
+  string workflow_id = 2;
+  string run_id = 3;
+  string activity_id = 4;
+  string activity_type = 5;
+  bytes input = 6;
+  int32 heartbeat_timeout_seconds = 7;
+}
+
+message AddActivityTaskResponse {}
+
+// Data Structures
+message HistoryEvent {
+  int64 event_id = 1;
+  string event_type = 2; // e.g., "WorkflowExecutionStarted", "ActivityTaskScheduled"
+  bytes payload = 3; 
+  int64 timestamp = 4;
+}
+
+message Command {
+  string command_type = 1; // e.g., "ScheduleActivityTask", "StartTimer", "CompleteWorkflowExecution"
+  bytes attributes = 2; // JSON-serialized attributes for the specific command
+}
+
+message RecordWorkflowTaskFailedHistoryRequest {
+  string workflow_id = 1;
+  string run_id      = 2;
+  string cause       = 3;
+}
+
+message RecordWorkflowTaskFailedHistoryResponse {}

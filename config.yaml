@@ -1,0 +1,28 @@
+database:
+  host: workflow_postgres
+  port: 5432
+  user: user
+  password: password
+  name: minidb
+  sslmode: disable
+
+redis:
+  addr: workflow_redis:6379
+
+frontend:
+  grpc_port: 8080
+
+history:
+  grpc_port: 8081
+  addr: workflow_history:8081
+  client_timeout_seconds: 5
+
+matching:
+  grpc_port: 8082
+  addr: workflow_matching:8082
+  client_timeout_seconds: 5
+  poll_timeout_seconds: 60
+
+log:
+  level: info
+  development: false
