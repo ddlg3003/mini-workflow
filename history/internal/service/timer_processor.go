@@ -272,7 +272,8 @@ func (p *TimerProcessor) nextWaitDuration(ctx context.Context) time.Duration {
 }
 
 func (p *TimerProcessor) scavenge(ctx context.Context) {
-	timers, err := p.repo.GetNonFiredTimers(ctx)
+	upTo := time.Now().Add(1 * time.Hour)
+	timers, err := p.repo.GetNonFiredTimers(ctx, upTo)
 	if err != nil {
 		p.log.Error("scavenger: get non-fired timers failed", zap.Error(err))
 		return

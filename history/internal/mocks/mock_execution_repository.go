@@ -319,9 +319,9 @@ func (_c *MockExecutionRepository_GetHistoryEvents_Call) RunAndReturn(run func(c
 	return _c
 }
 
-// GetNonFiredTimers provides a mock function with given fields: ctx
-func (_m *MockExecutionRepository) GetNonFiredTimers(ctx context.Context) ([]domain.Timer, error) {
-	ret := _m.Called(ctx)
+// GetNonFiredTimers provides a mock function with given fields: ctx, upTo
+func (_m *MockExecutionRepository) GetNonFiredTimers(ctx context.Context, upTo time.Time) ([]domain.Timer, error) {
+	ret := _m.Called(ctx, upTo)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetNonFiredTimers")
@@ -329,19 +329,19 @@ func (_m *MockExecutionRepository) GetNonFiredTimers(ctx context.Context) ([]dom
 
 	var r0 []domain.Timer
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]domain.Timer, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time) ([]domain.Timer, error)); ok {
+		return rf(ctx, upTo)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []domain.Timer); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time) []domain.Timer); ok {
+		r0 = rf(ctx, upTo)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.Timer)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time) error); ok {
+		r1 = rf(ctx, upTo)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -356,13 +356,14 @@ type MockExecutionRepository_GetNonFiredTimers_Call struct {
 
 // GetNonFiredTimers is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockExecutionRepository_Expecter) GetNonFiredTimers(ctx interface{}) *MockExecutionRepository_GetNonFiredTimers_Call {
-	return &MockExecutionRepository_GetNonFiredTimers_Call{Call: _e.mock.On("GetNonFiredTimers", ctx)}
+//   - upTo time.Time
+func (_e *MockExecutionRepository_Expecter) GetNonFiredTimers(ctx interface{}, upTo interface{}) *MockExecutionRepository_GetNonFiredTimers_Call {
+	return &MockExecutionRepository_GetNonFiredTimers_Call{Call: _e.mock.On("GetNonFiredTimers", ctx, upTo)}
 }
 
-func (_c *MockExecutionRepository_GetNonFiredTimers_Call) Run(run func(ctx context.Context)) *MockExecutionRepository_GetNonFiredTimers_Call {
+func (_c *MockExecutionRepository_GetNonFiredTimers_Call) Run(run func(ctx context.Context, upTo time.Time)) *MockExecutionRepository_GetNonFiredTimers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		run(args[0].(context.Context), args[1].(time.Time))
 	})
 	return _c
 }
@@ -372,7 +373,7 @@ func (_c *MockExecutionRepository_GetNonFiredTimers_Call) Return(_a0 []domain.Ti
 	return _c
 }
 
-func (_c *MockExecutionRepository_GetNonFiredTimers_Call) RunAndReturn(run func(context.Context) ([]domain.Timer, error)) *MockExecutionRepository_GetNonFiredTimers_Call {
+func (_c *MockExecutionRepository_GetNonFiredTimers_Call) RunAndReturn(run func(context.Context, time.Time) ([]domain.Timer, error)) *MockExecutionRepository_GetNonFiredTimers_Call {
 	_c.Call.Return(run)
 	return _c
 }

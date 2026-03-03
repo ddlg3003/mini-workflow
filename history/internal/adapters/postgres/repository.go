@@ -210,14 +210,14 @@ func (r *postgresRepo) GetTimerByID(ctx context.Context, timerID uuid.UUID) (*do
 	return &t, nil
 }
 
-func (r *postgresRepo) GetNonFiredTimers(ctx context.Context) ([]domain.Timer, error) {
+func (r *postgresRepo) GetNonFiredTimers(ctx context.Context, upTo time.Time) ([]domain.Timer, error) {
 	var timers []domain.Timer
 	err := r.db.SelectContext(ctx, &timers, `
 		SELECT timer_id, namespace, workflow_id, run_id, fire_time, timer_type, task_token, is_fired
 		FROM timers
-		WHERE is_fired = false
+		WHERE is_fired = false AND fire_time <= $1
 		ORDER BY fire_time ASC
-	`)
+	`, upTo)
 	if err != nil {
 		return nil, err
 	}

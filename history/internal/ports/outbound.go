@@ -25,7 +25,7 @@ type ExecutionRepository interface {
 	GetActivityState(ctx context.Context, namespace, workflowID string, runID uuid.UUID, activityID string) (*domain.ActivityState, error)
 	MarkTimerFired(ctx context.Context, timerID uuid.UUID) error
 	GetTimerByID(ctx context.Context, timerID uuid.UUID) (*domain.Timer, error)
-	GetNonFiredTimers(ctx context.Context) ([]domain.Timer, error)
+	GetNonFiredTimers(ctx context.Context, upTo time.Time) ([]domain.Timer, error)
 	FindRunningWorkflow(ctx context.Context, namespace, workflowID string) (*domain.WorkflowExecution, error)
 	GetActivityTimeoutTimer(ctx context.Context, namespace, workflowID string, runID uuid.UUID, activityID string) (*domain.Timer, error)
 	UpdateTimerFireTime(ctx context.Context, timerID uuid.UUID, newFireTime time.Time) error

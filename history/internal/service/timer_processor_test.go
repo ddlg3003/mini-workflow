@@ -105,7 +105,7 @@ func TestTimerProcessorDispatch(t *testing.T) {
 			{TimerID: uuid.New(), FireTime: time.Now().Add(2 * time.Minute)},
 		}
 
-		repo.EXPECT().GetNonFiredTimers(mock.Anything).Return(timers, nil).Once()
+		repo.EXPECT().GetNonFiredTimers(mock.Anything, mock.Anything).Return(timers, nil).Once()
 		ts.EXPECT().RebuildFromDB(mock.Anything, timers).Return(nil).Once()
 
 		tp := NewTimerProcessor(repo, ts, matching, zap.NewNop())

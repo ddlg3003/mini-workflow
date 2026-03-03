@@ -26,6 +26,8 @@ func TestRecordActivityTaskCompleted(t *testing.T) {
 		exec := runningExec("wf1")
 
 		repo.EXPECT().GetWorkflowExecution(mock.Anything, "default", exec.WorkflowID, exec.RunID).Return(exec, nil).Once()
+		actState := buildActivityState(exec, "act-1", 1)
+		repo.EXPECT().GetActivityState(mock.Anything, "default", exec.WorkflowID, exec.RunID, "act-1").Return(actState, nil).Once()
 		repo.EXPECT().UpdateWorkflowExecution(mock.Anything, mock.Anything, exec.CurrentVersion, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 		matching.EXPECT().AddWorkflowTask(mock.Anything, mock.AnythingOfType("*workflow.AddWorkflowTaskRequest")).Return(&pb.AddWorkflowTaskResponse{}, nil).Once()
 
